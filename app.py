@@ -91,8 +91,10 @@ def load_runtime():
     from google.adk.runners import Runner
     from google.adk.sessions import InMemorySessionService
 
+    from telecomtriage import tracing
     from telecomtriage.agent import root_agent
 
+    tracing.instrument(root_agent)  # show tool calls made inside the specialists in the trace
     session_service = InMemorySessionService()
     runner = Runner(agent=root_agent, app_name=APP_NAME, session_service=session_service)
     return runner, session_service
@@ -153,15 +155,26 @@ async def ask_agent(runner, session_service, session_id: str, text: str, on_trac
         if on_trace:
             on_trace(line)
 
-    async for event in runner.run_async(user_id=USER_ID, session_id=session_id, new_message=message):
-        for call in event.get_function_calls() or []:
-            args = json.dumps(dict(call.args or {}), default=str)
-            note(f"-> {call.name}({args[:200]})")
-        for resp in event.get_function_responses() or []:
-            note(f"<- {resp.name} returned")
-        if event.is_final_response() and event.content and event.content.parts:
-            answer = "".join(p.text for p in event.content.parts if getattr(p, "text", None))
+    from telecomtriage import tracing
+
+    token = tracing.set_sink(note)  # tool calls inside sub-agents report here
+    try:
+        async for event in runner.run_async(user_id=USER_ID, session_id=session_id, new_message=message):
+            _collect(event, note)
+            if event.is_final_response() and event.content and event.content.parts:
+                answer = "".join(p.text for p in event.content.parts if getattr(p, "text", None))
+    finally:
+        tracing.reset_sink(token)
     return answer or "(The agent returned no text.)", trace
+
+
+def _collect(event, note):
+    """Turn one ADK event into trace lines."""
+    for call in event.get_function_calls() or []:
+        args = json.dumps(dict(call.args or {}), default=str)
+        note(f"-> {call.name}({args[:200]})")
+    for resp in event.get_function_responses() or []:
+        note(f"<- {resp.name} returned")
 
 
 # --- UI ------------------------------------------------------------------------
