@@ -160,23 +160,44 @@ if "session_id" not in st.session_state:
     st.session_state.messages = []
     st.session_state.turns = 0
 
+GITHUB_URL = "https://github.com/mjfocus19/telecom-triage-agent"
+
+EXAMPLES = [
+    "My account is ABC123 and I had an outage. Am I eligible for a refund?",
+    "What is your return policy?",
+    "What's the refund policy?",
+    "Check account def123",
+]
+
+ARCHITECTURE_DOT = r"""
+digraph {
+  rankdir=LR;
+  node [shape=box, style="rounded", fontname="Helvetica", fontsize=11];
+  Q  [label="Customer\nquestion"];
+  R  [label="Router agent"];
+  B  [label="Billing\nspecialist"];
+  P  [label="Policy\nspecialist"];
+  T1 [label="get_account_usage\n(SQLite lookup)"];
+  T2 [label="check_refund_eligibility\n(business rule)"];
+  T3 [label="search_policy_docs\n(ChromaDB + Gemini embeddings)"];
+  Q -> R; R -> B; R -> P; B -> T1; B -> T2; P -> T3;
+}
+"""
+
 st.title("Telecom Care Triage Agent")
-st.caption("Prototype demo on mock data. A router agent hands each question to a billing or policy specialist.")
+st.caption(
+    "A working prototype of a multi-agent AI assistant for customer care, built with Google's Agent Development Kit "
+    "(ADK) and Gemini. All data is fictional."
+)
 
 with st.sidebar:
     st.subheader("Try these")
-    examples = [
-        "My account is ABC123 and I had an outage. Am I eligible for a refund?",
-        "What is your return policy?",
-        "What's the refund policy?",
-        "Check account def123",
-    ]
-    for example in examples:
-        if st.button(example, use_container_width=True):
+    for i, example in enumerate(EXAMPLES):
+        if st.button(example, key=f"side_{i}", width="stretch"):
             st.session_state.pending = example
     st.divider()
     show_trace = st.toggle("Show routing and tool trace", value=True)
-    if st.button("Reset conversation", use_container_width=True):
+    if st.button("Reset conversation", width="stretch"):
         for key in ("session_id", "messages", "turns"):
             st.session_state.pop(key, None)
         st.rerun()
@@ -185,6 +206,44 @@ with st.sidebar:
         "Sample accounts: ABC123 (unlimited plan, 180 outage minutes) and DEF123 (limited plan, 50 outage minutes). "
         "All data is fictional. The agent never promises an exact refund amount; it flags eligibility for human review."
     )
+
+first_visit = not st.session_state.messages and not st.session_state.get("pending")
+
+with st.expander("About this demo", expanded=first_visit):
+    st.markdown(
+        "**What it is.** A router agent reads each customer question and hands it to a billing specialist or a "
+        "policy specialist. The specialists use tools: a database lookup, a refund rule, and search over policy "
+        "documents. The router decides who handles each question."
+    )
+    st.markdown("**What each example shows**")
+    st.markdown(
+        "| Example | What to look for |\n"
+        "|---|---|\n"
+        "| Outage refund (ABC123) | **Chained tools:** account lookup, then an eligibility rule. **Guardrail:** it confirms "
+        "eligibility but does not promise a refund amount. |\n"
+        "| Return policy | **RAG:** finds the matching policy text in a vector store and answers from it. |\n"
+        "| Refund policy | **Routing:** an ambiguous question. The router chooses which specialist to ask. |\n"
+        "| Check account def123 | **Input cleanup:** a lowercase account ID still resolves, then the refund rule runs. |"
+    )
+    st.markdown("**How it is wired**")
+    st.graphviz_chart(ARCHITECTURE_DOT, width="stretch")
+    st.markdown("**What is real, and what is not**")
+    st.markdown(
+        "- **Real:** a working router and two specialist agents, chained tool calls, retrieval over a vector store, "
+        "and the code you can read on GitHub.\n"
+        "- **Mock or not built yet:** the data is two sample accounts and three policy sentences. Sessions live in "
+        "memory only. The refund guardrail is an instruction to the model, not enforced in code. There is no login, "
+        "monitoring or automated evaluation in this deployment. This is a prototype, not a production system."
+    )
+    st.markdown(f"Built by Amjad Hasnain. [Code and architecture notes on GitHub]({GITHUB_URL})")
+
+if first_visit:
+    st.markdown("**Start here:** pick an example, or type your own question below.")
+    cols = st.columns(2)
+    for i, example in enumerate(EXAMPLES):
+        if cols[i % 2].button(example, key=f"main_{i}", width="stretch"):
+            st.session_state.pending = example
+            st.rerun()
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
@@ -195,7 +254,7 @@ for msg in st.session_state.messages:
         if msg.get("elapsed"):
             st.caption(f"Answered in {msg['elapsed']:.1f}s")
 
-prompt =st.chat_input("Ask about a bill, an outage refund, or company policy")
+prompt = st.chat_input("Ask about a bill, an outage refund, or company policy")
 if st.session_state.get("pending"):
     prompt = st.session_state.pop("pending")
 
