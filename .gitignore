@@ -19,3 +19,7 @@ chroma_db/
 ADK_Learning1/
 
 .DS_Store
+
+# Eval output
+evals/results.json
+.pytest_cache/

@@ -6,6 +6,7 @@ from google import genai
 from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
 import sqlite3
+from .guardrails import refund_amount_guard
 
 
 
@@ -102,7 +103,7 @@ billing_Agent = Agent(
     Never promise exact refund amounts without checking system boundaries or human-in-loop
     """,
     tools=[get_account_usage, check_refund_eligibility],
-    
+    after_model_callback=refund_amount_guard,
 )
 
 # Specialist 2: Policy Expert
@@ -128,5 +129,6 @@ root_agent = Agent(
     - If they describe a policy problem , delegate to policy_Agent.
     """,
     tools=[AgentTool(agent=billing_Agent),AgentTool(agent=policy_Agent)],
+    after_model_callback=refund_amount_guard,
 )
 

@@ -9,7 +9,7 @@ A multi-agent customer-care prototype built with Google's Agent Development Kit 
 - **Billing questions** ("I had an outage, am I eligible for a refund?"): the billing specialist looks up the account, then chains into a refund-eligibility check using plan type and outage minutes.
 - **Policy questions** ("What is your return policy?"): the policy specialist retrieves matching text from a vector store and answers from it instead of from the model's own memory.
 - **Ambiguous questions** ("What's the refund policy?"): the router can call both specialists and combine the answers.
-- **Refund guardrail:** the billing agent confirms eligibility but does not promise an exact refund amount. Final amounts are left to human review.
+- **Refund guardrail:** the billing agent confirms eligibility but does not promise an exact refund amount. This is enforced in code (`telecomtriage/guardrails.py`): an `after_model_callback` rewrites any sentence that links a refund to a dollar amount. Final amounts are left to human review.
 
 ## Architecture
 
@@ -38,8 +38,8 @@ flowchart LR
 | Chained tool calls (usage lookup, then eligibility rule) | Persistent sessions (sessions are in memory and reset on restart) |
 | RAG over a small document set | Ingestion of real documents (PDF extraction, chunking, tables) |
 | Streamlit demo with a routing and tool trace | Structured logging, monitoring and cost tracking |
-| | Automated evaluation in this repo (a 9-case manual check was run in a notebook during development) |
-| | Code-level enforcement of the refund guardrail (it is currently an instruction in the agent prompt) |
+| Refund guardrail enforced in code, with unit and integration tests | Semantic guardrail (the current one is pattern-based and can miss unusual phrasings) |
+| Evaluation script with 10 cases (`evals/`), run by hand | Evaluation on every change (CI) |
 
 The policy knowledge base is three sentences and the billing table has two accounts. The architecture is the real part. The scale is not.
 
@@ -67,14 +67,25 @@ adk web                  # ADK's developer UI, run from this folder
 
 On first start the agent creates `billing.db` and `chroma_db_recap/` from the mock data in `telecomtriage/agent.py`.
 
+## Tests and evaluation
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest tests                 # offline: guardrail and scoring logic, no API key needed
+python -m evals.run_evals              # live: runs 10 cases against the real agent (uses your API key)
+python -m evals.run_evals --runs 3     # repeat each case to expose flaky behaviour
+```
+
+The eval script checks, per case, which tools were called, whether the answer contains the expected facts, and that no refund amount is stated. Results are written to `evals/results.json`. LLM output varies between runs, so a failing case is a signal to investigate, not always a bug.
+
 ## Deploy the demo
 
 Streamlit Community Cloud works: point it at `app.py`, choose Python 3.12 in the advanced settings, and add the secrets from `.streamlit/secrets.toml.example`. Set `APP_PASSWORD` so only people you share the code with can use it, and put a spending cap on the API key.
 
 ## Roadmap
 
-1. Move the guardrail from the prompt into code: block or flag any response that states a refund amount.
+1. Replace the pattern-based guardrail with a semantic check (for example a second model call or structured output).
 2. Add logging for every routing decision, tool call and retrieval.
-3. Add the evaluation script to the repo and run it automatically on each change.
+3. Run the evaluation script automatically on each change (CI) and track results over time.
 4. Ingest real PDFs with chunking, table handling and source citations.
 5. Deploy the container (see `Dockerfile`) to a managed service behind real authentication.

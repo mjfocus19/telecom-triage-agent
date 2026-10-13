@@ -18,7 +18,19 @@ from pathlib import Path
 
 import streamlit as st
 
-st.set_page_config(page_title="Telecom Care Triage Agent", layout="centered")
+st.set_page_config(
+    page_title="Telecom Care Triage Agent",
+    page_icon="📡",
+    layout="centered",
+    menu_items={
+        "About": (
+            "**Telecom Care Triage Agent**: a multi-agent customer-care prototype built with Google ADK and Gemini. "
+            "All data is fictional. Source: https://github.com/mjfocus19/telecom-triage-agent"
+        ),
+        "Report a bug": "https://github.com/mjfocus19/telecom-triage-agent/issues",
+        "Get help": "https://github.com/mjfocus19/telecom-triage-agent#readme",
+    },
+)
 
 APP_DIR = Path(__file__).parent
 # agent.py opens ./billing.db and ./chroma_db_recap relative to the working
@@ -172,7 +184,10 @@ EXAMPLES = [
 ARCHITECTURE_DOT = r"""
 digraph {
   rankdir=LR;
-  node [shape=box, style="rounded", fontname="Helvetica", fontsize=11];
+  bgcolor="transparent";
+  node [shape=box, style="rounded,filled", fillcolor="#1f2937", color="#60a5fa", fontcolor="#f3f4f6",
+        fontname="Helvetica", fontsize=11];
+  edge [color="#9ca3af"];
   Q  [label="Customer\nquestion"];
   R  [label="Router agent"];
   B  [label="Billing\nspecialist"];
@@ -230,10 +245,12 @@ with st.expander("About this demo", expanded=first_visit):
     st.markdown("**What is real, and what is not**")
     st.markdown(
         "- **Real:** a working router and two specialist agents, chained tool calls, retrieval over a vector store, "
-        "and the code you can read on GitHub.\n"
+        "a refund guardrail enforced in code (not only in the prompt), and unit tests plus an evaluation script in the "
+        "GitHub repo.\n"
         "- **Mock or not built yet:** the data is two sample accounts and three policy sentences. Sessions live in "
-        "memory only. The refund guardrail is an instruction to the model, not enforced in code. There is no login, "
-        "monitoring or automated evaluation in this deployment. This is a prototype, not a production system."
+        "memory only. The guardrail is pattern-based, so it can miss unusual phrasings. The evaluation script is run "
+        "by hand, not automatically, and this deployment has no login, monitoring or cost tracking. This is a "
+        "prototype, not a production system."
     )
     st.markdown(f"Built by Amjad Hasnain. [Code and architecture notes on GitHub]({GITHUB_URL})")
 
