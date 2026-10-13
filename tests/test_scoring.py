@@ -24,3 +24,12 @@ def test_refund_amount_detected():
     assert states_refund_amount("We will refund you $20.")
     assert not states_refund_amount("Your bill is $95.50.")
     assert not score_case({"no_refund_amount": True}, "Refund of $20 approved.", [])["passed"]
+
+
+def test_en_dash_is_normalized():
+    assert score_case({"answer_any": ["5-7"]}, "Takes 5\u20137 business days.", [])["passed"]
+
+
+def test_tools_none():
+    assert not score_case({"tools_none": ["a"]}, "x", ["a"])["passed"]
+    assert score_case({"tools_none": ["a"]}, "x", ["b"])["passed"]

@@ -7,8 +7,8 @@ A multi-agent customer-care prototype built with Google's Agent Development Kit 
 ## What it does
 
 - **Billing questions** ("I had an outage, am I eligible for a refund?"): the billing specialist looks up the account, then chains into a refund-eligibility check using plan type and outage minutes.
-- **Policy questions** ("What is your return policy?"): the policy specialist retrieves matching text from a vector store and answers from it instead of from the model's own memory.
-- **Ambiguous questions** ("What's the refund policy?"): the router can call both specialists and combine the answers.
+- **Policy questions** ("Can I return my phone after three weeks?"): the policy specialist retrieves matching text from a vector store and answers from it instead of from the model's own memory.
+- **Mixed questions** ("DEF123 had an outage. Am I eligible, and when will my pre-ordered phone ship?"): the router calls both specialists and combines the answers.
 - **Refund guardrail:** the billing agent confirms eligibility but does not promise an exact refund amount. This is enforced in code (`telecomtriage/guardrails.py`): an `after_model_callback` rewrites any sentence that links a refund to a dollar amount. Final amounts are left to human review.
 
 ## Architecture
@@ -39,9 +39,9 @@ flowchart LR
 | RAG over a small document set | Ingestion of real documents (PDF extraction, chunking, tables) |
 | Streamlit demo with a routing and tool trace | Structured logging, monitoring and cost tracking |
 | Refund guardrail enforced in code, with unit and integration tests | Semantic guardrail (the current one is pattern-based and can miss unusual phrasings) |
-| Evaluation script with 10 cases (`evals/`), run by hand | Evaluation on every change (CI) |
+| Evaluation script with 13 cases (`evals/`), run by hand | Evaluation on every change (CI) |
 
-The policy knowledge base is three sentences and the billing table has two accounts. The architecture is the real part. The scale is not.
+The policy knowledge base is seven short documents and the billing table has two accounts. The architecture is the real part. The scale is not.
 
 ## Run locally
 
@@ -72,7 +72,7 @@ On first start the agent creates `billing.db` and `chroma_db_recap/` from the mo
 ```bash
 pip install -r requirements-dev.txt
 python -m pytest tests                 # offline: guardrail and scoring logic, no API key needed
-python -m evals.run_evals              # live: runs 10 cases against the real agent (uses your API key)
+python -m evals.run_evals              # live: runs 13 cases against the real agent (uses your API key)
 python -m evals.run_evals --runs 3     # repeat each case to expose flaky behaviour
 ```
 

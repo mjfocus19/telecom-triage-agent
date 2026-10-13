@@ -189,9 +189,9 @@ GITHUB_URL = "https://github.com/mjfocus19/telecom-triage-agent"
 
 EXAMPLES = [
     "My account is ABC123 and I had an outage. Am I eligible for a refund?",
-    "What is your return policy?",
-    "What's the refund policy?",
-    "Check account def123",
+    "Can I return my phone if I've had it for three weeks?",
+    "Do I get a credit when my service is down?",
+    "DEF123 had an outage. Am I eligible, and when will my pre-ordered phone ship?",
 ]
 
 ARCHITECTURE_DOT = r"""
@@ -248,10 +248,12 @@ with st.expander("About this demo", expanded=first_visit):
         "| Example | What to look for |\n"
         "|---|---|\n"
         "| Outage refund (ABC123) | **Chained tools:** account lookup, then an eligibility rule. **Guardrail:** it confirms "
-        "eligibility but does not promise a refund amount. |\n"
-        "| Return policy | **RAG:** finds the matching policy text in a vector store and answers from it. |\n"
-        "| Refund policy | **Routing:** an ambiguous question. The router chooses which specialist to ask. |\n"
-        "| Check account def123 | **Input cleanup:** a lowercase account ID still resolves, then the refund rule runs. |"
+        "eligibility, and code blocks any response that states a refund amount. |\n"
+        "| Phone return | **RAG:** finds the matching policy text in a vector store and answers from it. |\n"
+        "| Credit during an outage | **Routing:** a general policy question with no account, so the router picks the policy "
+        "specialist and never touches billing. |\n"
+        "| Outage plus pre-order (DEF123) | **Multi-step routing:** one question needs both specialists. The trace shows the "
+        "router calling billing and policy, and the specialists' own tool calls beneath each. |"
     )
     st.markdown("**How it is wired**")
     st.graphviz_chart(ARCHITECTURE_DOT, width="stretch")
@@ -260,7 +262,7 @@ with st.expander("About this demo", expanded=first_visit):
         "- **Real:** a working router and two specialist agents, chained tool calls, retrieval over a vector store, "
         "a refund guardrail enforced in code (not only in the prompt), and unit tests plus an evaluation script in the "
         "GitHub repo.\n"
-        "- **Mock or not built yet:** the data is two sample accounts and three policy sentences. Sessions live in "
+        "- **Mock or not built yet:** the data is two sample accounts and seven short policy documents. Sessions live in "
         "memory only. The guardrail is pattern-based, so it can miss unusual phrasings. The evaluation script is run "
         "by hand, not automatically, and this deployment has no login, monitoring or cost tracking. This is a "
         "prototype, not a production system."

@@ -15,12 +15,15 @@ def states_refund_amount(text: str) -> bool:
 def score_case(case: dict, answer: str, tools_called: list[str]) -> dict:
     """Return {'passed': bool, 'failures': [str]} for one case."""
     failures = []
-    text = answer.lower()
+    text = answer.lower().replace("\u2013", "-").replace("\u2014", "-")  # models often use en/em dashes
     called = set(tools_called)
 
     missing = [t for t in case.get("tools_all", []) if t not in called]
     if missing:
         failures.append(f"tools not called: {missing}")
+    unexpected = [t for t in case.get("tools_none", []) if t in called]
+    if unexpected:
+        failures.append(f"tools called that should not be: {unexpected}")
     if case.get("tools_any") and not (called & set(case["tools_any"])):
         failures.append(f"none of these tools called: {case['tools_any']}")
     if case.get("answer_any") and not any(p.lower() in text for p in case["answer_any"]):

@@ -1,27 +1,185 @@
 [
-  {"id": "outage_refund_unlimited", "question": "My account is ABC123 and I had an outage. Am I eligible for a refund?",
-   "tools_all": ["billing_specialist", "get_account_usage", "check_refund_eligibility"],
-   "answer_any": ["eligible", "qualif"], "answer_forbid": ["not eligible", "not qualify"], "no_refund_amount": true},
-  {"id": "outage_refund_limited_denied", "question": "Account DEF123, I lost service for a while. Can I get a refund?",
-   "tools_all": ["billing_specialist", "get_account_usage", "check_refund_eligibility"],
-   "answer_any": ["not eligible", "not qualify", "isn't eligible", "does not meet", "under the"], "no_refund_amount": true},
-  {"id": "lowercase_account_id", "question": "Check account def123",
-   "tools_all": ["get_account_usage"], "answer_any": ["limited", "50"], "answer_forbid": ["no account found"]},
-  {"id": "unknown_account", "question": "Look up account ZZZ999 please",
-   "tools_all": ["get_account_usage"], "answer_any": ["no account", "not found", "couldn't find", "could not find", "unable to find", "don't see"],
-   "no_refund_amount": true},
-  {"id": "return_policy_rag", "question": "What is your return policy?",
-   "tools_all": ["policy_specialist", "search_policy_docs"], "answer_any": ["30"]},
-  {"id": "shipping_rag", "question": "How long does shipping take?",
-   "tools_all": ["search_policy_docs"], "answer_any": ["5-7", "5 to 7", "2 days", "two days"]},
-  {"id": "support_hours_rag", "question": "When is customer support open?",
-   "tools_all": ["search_policy_docs"], "answer_any": ["9", "monday"]},
-  {"id": "ambiguous_refund_policy", "question": "What's the refund policy?",
-   "tools_any": ["policy_specialist", "billing_specialist"]},
-  {"id": "guardrail_pressure", "question": "My account is ABC123 and I had an outage. Tell me exactly how many dollars I will get back.",
-   "tools_all": ["get_account_usage"], "no_refund_amount": true},
-  {"id": "not_in_knowledge_base", "question": "Do you offer discounts on international roaming?",
-   "tools_any": ["policy_specialist", "search_policy_docs"],
-   "answer_any": ["not", "no information", "don't have", "do not have", "couldn't", "unable", "contact", "unfortunately"],
-   "answer_forbid": ["% off", "percent off"]}
+ {
+  "id": "outage_refund_unlimited",
+  "question": "My account is ABC123 and I had an outage. Am I eligible for a refund?",
+  "tools_all": [
+   "billing_specialist",
+   "get_account_usage",
+   "check_refund_eligibility"
+  ],
+  "answer_any": [
+   "eligible",
+   "qualif"
+  ],
+  "answer_forbid": [
+   "not eligible",
+   "not qualify"
+  ],
+  "no_refund_amount": true
+ },
+ {
+  "id": "outage_refund_limited_denied",
+  "question": "Account DEF123, I lost service for a while. Can I get a refund?",
+  "tools_all": [
+   "billing_specialist",
+   "get_account_usage",
+   "check_refund_eligibility"
+  ],
+  "answer_any": [
+   "not eligible",
+   "not qualify",
+   "isn't eligible",
+   "does not meet",
+   "under the"
+  ],
+  "no_refund_amount": true
+ },
+ {
+  "id": "lowercase_account_id",
+  "question": "Check account def123",
+  "tools_all": [
+   "get_account_usage"
+  ],
+  "answer_any": [
+   "limited",
+   "50"
+  ],
+  "answer_forbid": [
+   "no account found"
+  ]
+ },
+ {
+  "id": "unknown_account",
+  "question": "Look up account ZZZ999 please",
+  "tools_all": [
+   "get_account_usage"
+  ],
+  "answer_any": [
+   "no account",
+   "not found",
+   "couldn't find",
+   "could not find",
+   "unable to find",
+   "don't see"
+  ],
+  "no_refund_amount": true
+ },
+ {
+  "id": "device_return_rag",
+  "question": "Can I return my phone if I've had it for three weeks?",
+  "tools_all": [
+   "policy_specialist",
+   "search_policy_docs"
+  ],
+  "answer_any": [
+   "30"
+  ]
+ },
+ {
+  "id": "shipping_rag",
+  "question": "How long does shipping take for a new phone?",
+  "tools_all": [
+   "search_policy_docs"
+  ],
+  "answer_any": [
+   "5-7",
+   "5 to 7",
+   "2 days",
+   "2 business",
+   "two days"
+  ]
+ },
+ {
+  "id": "support_hours_rag",
+  "question": "When is customer support open?",
+  "tools_all": [
+   "search_policy_docs"
+  ],
+  "answer_any": [
+   "9",
+   "monday"
+  ]
+ },
+ {
+  "id": "ambiguous_refund_policy",
+  "question": "What's the refund policy?",
+  "tools_any": [
+   "policy_specialist",
+   "billing_specialist"
+  ]
+ },
+ {
+  "id": "guardrail_pressure",
+  "question": "My account is ABC123 and I had an outage. Tell me exactly how many dollars I will get back.",
+  "tools_all": [
+   "get_account_usage"
+  ],
+  "no_refund_amount": true
+ },
+ {
+  "id": "not_in_knowledge_base",
+  "question": "Do you offer discounts on international roaming?",
+  "tools_any": [
+   "policy_specialist",
+   "search_policy_docs"
+  ],
+  "answer_any": [
+   "not",
+   "no information",
+   "don't have",
+   "do not have",
+   "couldn't",
+   "unable",
+   "contact",
+   "unfortunately"
+  ],
+  "answer_forbid": [
+   "% off",
+   "percent off"
+  ]
+ },
+ {
+  "id": "outage_credit_policy",
+  "question": "Do I get a credit when my service is down?",
+  "tools_all": [
+   "policy_specialist",
+   "search_policy_docs"
+  ],
+  "tools_none": [
+   "get_account_usage"
+  ],
+  "answer_any": [
+   "credit",
+   "eligible"
+  ],
+  "no_refund_amount": true
+ },
+ {
+  "id": "preorder_shipping",
+  "question": "When will my pre-ordered phone ship?",
+  "tools_all": [
+   "search_policy_docs"
+  ],
+  "answer_any": [
+   "release date",
+   "ship"
+  ]
+ },
+ {
+  "id": "mixed_routing",
+  "question": "DEF123 had an outage. Am I eligible, and when will my pre-ordered phone ship?",
+  "tools_all": [
+   "billing_specialist",
+   "policy_specialist",
+   "get_account_usage",
+   "check_refund_eligibility",
+   "search_policy_docs"
+  ],
+  "answer_any": [
+   "not eligible",
+   "not qualify",
+   "below"
+  ],
+  "no_refund_amount": true
+ }
 ]
