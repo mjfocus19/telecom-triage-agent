@@ -1,0 +1,21 @@
+# Secrets: never commit these
+.env
+.streamlit/secrets.toml
+
+# Environments and caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+.adk/
+.ipynb_checkpoints/
+
+# Generated at runtime from mock data (agent.py rebuilds both on first start)
+billing.db
+chroma_db_recap/
+chroma_db/
+
+# Learning notebook and its own venv; clear notebook outputs and check for keys before adding
+ADK_Learning1/
+
+.DS_Store

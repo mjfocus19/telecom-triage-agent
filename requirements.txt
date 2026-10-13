@@ -1,0 +1,5 @@
+google-adk
+google-genai
+chromadb
+requests
+streamlit
