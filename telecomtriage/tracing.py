@@ -8,6 +8,7 @@ current request (a ContextVar, so concurrent users do not see each other's calls
 import functools
 import inspect
 import json
+import threading
 from contextvars import ContextVar
 from typing import Callable, Optional
 
@@ -15,18 +16,34 @@ from google.adk.tools.agent_tool import AgentTool
 
 _sink: ContextVar[Optional[Callable[[str], None]]] = ContextVar("trace_sink", default=None)
 
+# Fallback for runtimes that run tools where the ContextVar is not visible (worker threads, other
+# event loops). If exactly one request is active the line must belong to it; with several active
+# requests it cannot be attributed, so it is dropped rather than shown to the wrong visitor.
+_active: list = []
+_lock = threading.Lock()
+
 
 def set_sink(fn: Optional[Callable[[str], None]]):
-    """Route trace lines to `fn` for the current context. Returns a token for reset_sink."""
-    return _sink.set(fn)
+    """Route trace lines to `fn` for the current request. Returns a token for reset_sink."""
+    with _lock:
+        if fn:
+            _active.append(fn)
+    return (_sink.set(fn), fn)
 
 
 def reset_sink(token) -> None:
-    _sink.reset(token)
+    ctx_token, fn = token
+    _sink.reset(ctx_token)
+    with _lock:
+        if fn in _active:
+            _active.remove(fn)
 
 
 def _emit(line: str) -> None:
     fn = _sink.get()
+    if fn is None:
+        with _lock:
+            fn = _active[0] if len(_active) == 1 else None
     if fn:
         fn(line)
 
