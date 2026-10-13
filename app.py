@@ -253,7 +253,7 @@ with st.expander("About this demo", expanded=first_visit):
         "| Credit during an outage | **Routing:** a general policy question with no account, so the router picks the policy "
         "specialist and never touches billing. |\n"
         "| Outage plus pre-order (DEF123) | **Multi-step routing:** one question needs both specialists. The trace shows the "
-        "router calling billing and policy, and the specialists' own tool calls beneath each. |"
+        "router calling billing and policy in the same turn, and the answer combines both. |"
     )
     st.markdown("**How it is wired**")
     st.graphviz_chart(ARCHITECTURE_DOT, width="stretch")
