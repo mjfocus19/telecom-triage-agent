@@ -30,6 +30,7 @@ os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "FALSE")
 
 from google.genai import types  # noqa: E402
 
+from evals import recording  # noqa: E402
 from evals.scoring import score_case  # noqa: E402
 
 
@@ -37,12 +38,13 @@ async def run_case(runner, svc, question: str):
     sid = uuid.uuid4().hex
     await svc.create_session(app_name="evals", user_id="eval", session_id=sid)
     msg = types.Content(role="user", parts=[types.Part(text=question)])
+    recording.CALLS.clear()
     tools, answer = [], ""
     async for ev in runner.run_async(user_id="eval", session_id=sid, new_message=msg):
         tools += [c.name for c in (ev.get_function_calls() or [])]
         if ev.is_final_response() and ev.content and ev.content.parts:
             answer = "".join(p.text for p in ev.content.parts if getattr(p, "text", None))
-    return answer, tools
+    return answer, tools + recording.CALLS  # top-level calls + calls made inside sub-agents
 
 
 async def main(runs: int) -> int:
@@ -51,6 +53,7 @@ async def main(runs: int) -> int:
 
     from telecomtriage.agent import root_agent
 
+    recording.instrument(root_agent)
     svc = InMemorySessionService()
     runner = Runner(agent=root_agent, app_name="evals", session_service=svc)
     cases = json.loads((ROOT / "evals" / "cases.json").read_text(encoding="utf-8"))
